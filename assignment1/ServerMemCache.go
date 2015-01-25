@@ -98,7 +98,7 @@ func handleClient(conn net.Conn, m map[string]Data) {
 					})
 				}
 				globMutex.Unlock()
-				sr = "nr"
+				sr = ""
 			} else {
 				sr = "ERR_CMD_ERR\r\n" //wrong command line format
 			}
@@ -176,7 +176,7 @@ func handleClient(conn net.Conn, m map[string]Data) {
 					sr = "ERRNOTFOUND\r\n"
 				}
 			} else if l == 6 && cmd[5] == "noreply" {
-				sr = "nr"
+				sr = ""
 			} else {
 				sr = "ERR_CMD_ERR\r\n"
 			}
@@ -227,7 +227,6 @@ func checkAndExpire(m map[string]Data, key string, oldExp int64, setTime int64) 
 	return
 
 }
-
 
 func Client(ch chan string, strEcho string, c string) {
 	tcpAddr, err := net.ResolveTCPAddr("tcp", ":9000")

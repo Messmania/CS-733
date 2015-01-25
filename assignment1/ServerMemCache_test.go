@@ -248,31 +248,3 @@ func TestMRMC(t *testing.T) {
 	}
 
 }
-
-//PASSED
-//Test NO reply option
-func TestNoReply(t *testing.T) {
-	t.Parallel()
-	const n int = 3
-	cmd := "set mnp 10 10 noreply\r\nabcdefjg\r\nset bcd 15 5\r\nmonik\r\nget mnp\r\n"
-	chann := make(chan string)
-
-	//Expected outputs
-	E := []string{"nr", "OK", "VALUE 8\r\nabcdefjg\r\n"}
-
-	go Client(chann, cmd, "mc")
-	for i := 0; i < n; i++ {
-		R := <-chann
-		Rline := strings.Split(R, "\r\n")
-		r := strings.Fields(Rline[0])
-		if i == 1 {
-			R = r[0]
-		} else if i == 2 {
-			R = Rline[0] + "\r\n" + Rline[1] + "\r\n"
-		}
-		if R != E[i] {
-			t.Error("Expected and Received values are:\r\n", E, R)
-		}
-	}
-
-}
