@@ -3,7 +3,6 @@ package Server
 import (
 	"strings"
 	"testing"
-	//"fmt"
 	"time"
 )
 
@@ -53,7 +52,7 @@ func TestResponse(t *testing.T) {
 		} else if j == 2 {
 			R[j] = r[0] + " " + r[2] + " " + r[3] + "\r\n" + Rline[1] + "\r\n"
 		}
-		if R[j] != E[j] { //strings.EqualFold is failing for same strings..--check later about utf-8 coding
+		if R[j] != E[j] {
 			t.Error("Expected and Received values are:\r\n", E[j], R[j])
 		}
 	}

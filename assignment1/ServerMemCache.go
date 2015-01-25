@@ -139,7 +139,7 @@ func handleClient(conn net.Conn, m map[string]Data) {
 					numbytes := cmd[4]
 					if newVersion == oldVersion {
 						//Replace the value as old and new version are same
-						newVFloat, _ := strconv.ParseInt(newVersion, 10, 64) //check their errors as well!!
+						newVFloat, _ := strconv.ParseInt(newVersion, 10, 64)
 						numBInt, _ := strconv.ParseInt(numbytes, 10, 64)
 						exp, _ := strconv.ParseInt(cmd[2], 0, 64)
 						if numBInt != int64(len(value)) {
