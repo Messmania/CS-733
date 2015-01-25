@@ -48,7 +48,7 @@ func handleClient(conn net.Conn, m map[string]Data) {
 			return
 		}
 		sr := ""
-		//Convert command read from conn to array of strings then read them separately
+		/*Convert command read from conn to array of strings then read them separately	*/
 		str := string(buf[0:n])
 		line := strings.Split(str, "\r\n")
 		cmd := strings.Fields(line[0])
@@ -159,12 +159,18 @@ func handleClient(conn net.Conn, m map[string]Data) {
 							numBInt = int64(len(value))
 						}
 						m[key] = Data{value, ver, numBInt, time.Now().Unix(), exp, &sync.Mutex{}}
-						d.dbMutex.Unlock()
+						a := m[key]
+						if exp > 0 {
+							expInSec := secs * time.Duration(exp)
+							time.AfterFunc(expInSec, func() {
+								checkAndExpire(m, key, exp, a.setTime)
+							})
+						}
 						sr = "OK " + strconv.FormatInt(ver, 10) + "\r\n"
 					} else {
-						d.dbMutex.Unlock()
 						sr = "ERR_VERSION\r\n"
 					}
+					d.dbMutex.Unlock()
 				} else {
 					globMutex.Unlock()
 					sr = "ERRNOTFOUND\r\n"
@@ -221,6 +227,7 @@ func checkAndExpire(m map[string]Data, key string, oldExp int64, setTime int64) 
 	return
 
 }
+
 
 func Client(ch chan string, strEcho string, c string) {
 	tcpAddr, err := net.ResolveTCPAddr("tcp", ":9000")
