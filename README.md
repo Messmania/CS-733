@@ -2,7 +2,8 @@
 A server application based on memcache which accepts and responds to multiple clients simultaneously
 
 Following commands are implemented
-1.  Set: create the key-value pair, or update the value if it already exists.
+
+=>  Set: create the key-value pair, or update the value if it already exists.
 
     set <key> <exptime> <numbytes> [noreply]\r\n
     <value bytes>\r\n
@@ -11,9 +12,9 @@ Following commands are implemented
 
     OK <version>\r\n  
 
-    where version is a unique 64-bit number (in decimal format) assosciated with the key.
+    where version is a unique 64-bit number assosciated with the key.
 
-2.  Get: Given a key, retrieve the corresponding key-value pair
+=>  Get: Given a key, retrieve the corresponding key-value pair
 
     get <key>\r\n
 
@@ -22,7 +23,7 @@ Following commands are implemented
     VALUE <numbytes>\r\n
     <value bytes>\r\n
 
-3.  Get Meta: Retrieve value, version number and expiry time left
+=>  Get Meta: Retrieve value, version number and expiry time left
 
      getm <key>\r\n
 
@@ -31,7 +32,7 @@ Following commands are implemented
     VALUE <version> <exptime> <numbytes>\r\n
     <value bytes>\r\n
 
-4.  Compare and swap. This replaces the old value (corresponding to key) with the new value only if the version is still the same.
+=>  Compare and swap. This replaces the old value with the new value only if the version is still the same.
 
     cas <key> <exptime> <version> <numbytes> [noreply]\r\n
     <value bytes>\r\n
@@ -40,7 +41,7 @@ Following commands are implemented
 
       OK <version>\r\n
 
-5.  Delete key-value pair
+=>  Delete key-value pair
 
      delete <key>\r\n
 
