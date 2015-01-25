@@ -1,3 +1,9 @@
+<<<<<<< HEAD
+=======
+/* Trying to make an echo server
+ */
+
+>>>>>>> ea4e55e8a30386018d69ccb044dd3fddb94a368d
 package Server
 
 import (
@@ -53,7 +59,11 @@ func handleClient(conn net.Conn, m map[string]Data) {
 		line := strings.Split(str, "\r\n")
 		cmd := strings.Fields(line[0])
 		op := strings.ToLower(cmd[0])
+<<<<<<< HEAD
 		value := line[1]
+=======
+		value := line[1] //TO DO--Check if 2nd line has wrong no.of args or ignore
+>>>>>>> ea4e55e8a30386018d69ccb044dd3fddb94a368d
 		l := len(cmd)
 		key := cmd[1]
 
@@ -187,17 +197,29 @@ func checkErr(err error) {
 }
 
 func checkAndExpire(m map[string]Data, key string, oldExp int64, setTime int64) {
+<<<<<<< HEAD
 	absOldExp := setTime + oldExp
 	d, exist := m[key]
 	if exist == false {
 		fmt.Println("Key doesnt exist")
+=======
+	//m[key].dbMutex.Lock()
+	absOldExp := setTime + oldExp
+	d, exist := m[key]
+	if exist == false {
+>>>>>>> ea4e55e8a30386018d69ccb044dd3fddb94a368d
 		return
 	}
 	d.dbMutex.Lock()
 	absNewExp := setTime + d.expiry
 	if absOldExp == absNewExp {
+<<<<<<< HEAD
 		fmt.Println("About to delete")
 		delete(m, key)
+=======
+		delete(m, key)
+		d.dbMutex.Unlock()
+>>>>>>> ea4e55e8a30386018d69ccb044dd3fddb94a368d
 	}
 	d.dbMutex.Unlock()
 	return
@@ -218,6 +240,10 @@ func Client(ch chan string, strEcho string, c string) {
 		n, err1 := conn.Read(rep[0:])
 		checkErr(err1)
 		reply := string(rep[0:n])
+<<<<<<< HEAD
+=======
+		//fmt.Printf("Reply of %v is: %v \n",c,reply[0:n])		//For testing manually
+>>>>>>> ea4e55e8a30386018d69ccb044dd3fddb94a368d
 		ch <- reply
 	}
 	conn.Close()

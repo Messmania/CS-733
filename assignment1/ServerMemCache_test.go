@@ -52,13 +52,18 @@ func TestResponse(t *testing.T) {
 		} else if j == 2 {
 			R[j] = r[0] + " " + r[2] + " " + r[3] + "\r\n" + Rline[1] + "\r\n"
 		}
+<<<<<<< HEAD
 		if R[j] != E[j] {
+=======
+		if R[j] != E[j] { //strings.EqualFold is failing for same strings..--check later about utf-8 coding
+>>>>>>> ea4e55e8a30386018d69ccb044dd3fddb94a368d
 			t.Error("Expected and Received values are:\r\n", E[j], R[j])
 		}
 	}
 
 }
 
+<<<<<<< HEAD
 //For testing expiry and remaining exp in getm
 func TestCheckAndExpire(t *testing.T) {
 	t.Parallel()
@@ -67,6 +72,16 @@ func TestCheckAndExpire(t *testing.T) {
 
 	//for initialing the array otherwise it is becoming nil
 	for k := 0; k < n; k++ {
+=======
+//PASSED
+//To check expiration and remaining exp time in getm
+func TestExpiry(t *testing.T) {
+	t.Parallel()
+	chann := make([]chan string, 3)
+
+	//for initialing the array otherwise it is becoming nil
+	for k := 0; k < 3; k++ {
+>>>>>>> ea4e55e8a30386018d69ccb044dd3fddb94a368d
 		chann[k] = make(chan string)
 	}
 
@@ -77,27 +92,44 @@ func TestCheckAndExpire(t *testing.T) {
 
 	//Expected values
 	Eset1 := "OK"
+<<<<<<< HEAD
 	Egetm1 := "VALUE 2 8\r\nabcdefjg\r\n"
 	Egetm2 := "VALUE 5 7\r\nmonikas\r\n"
 	E := []string{Eset1, Egetm1, Eset1, Egetm2}
+=======
+	Egetm1 := "VALUE 1 8\r\nabcdefjg\r\n"
+	Egetm2 := "ERRNOTFOUND\r\n"
+	E := []string{Eset1, Egetm1, Egetm2}
+>>>>>>> ea4e55e8a30386018d69ccb044dd3fddb94a368d
 
 	go Client(chann[0], set1, "set1")
 	time.Sleep(time.Second * 1)
 	go Client(chann[1], getm1, "getm1")
 	time.Sleep(time.Second * 1)
+<<<<<<< HEAD
 	go Client(chann[2], set2, "set2")
 	time.Sleep(time.Second * 1)
 	go Client(chann[3], getm1, "getm2")
 
 	var R [n]string
+=======
+	go Client(chann[2], getm1, "getm2")
+
+	var R [3]string
+>>>>>>> ea4e55e8a30386018d69ccb044dd3fddb94a368d
 
 	//Excluding hard coded version number
 	Rset1 := strings.Fields(<-chann[0])
 	R[0] = Rset1[0]
+<<<<<<< HEAD
+=======
+
+>>>>>>> ea4e55e8a30386018d69ccb044dd3fddb94a368d
 	RLine := strings.Split(<-chann[1], "\r\n")
 	Rgetm1 := strings.Fields(RLine[0])
 	R[1] = Rgetm1[0] + " " + Rgetm1[2] + " " + Rgetm1[3] + "\r\n" + RLine[1] + "\r\n"
 
+<<<<<<< HEAD
 	Rset2 := strings.Fields(<-chann[2])
 	R[2] = Rset2[0]
 	RLine1 := strings.Split(<-chann[3], "\r\n")
@@ -105,6 +137,11 @@ func TestCheckAndExpire(t *testing.T) {
 	R[3] = Rgetm2[0] + " " + Rgetm2[2] + " " + Rgetm2[3] + "\r\n" + RLine1[1] + "\r\n"
 
 	for j := 0; j < n; j++ {
+=======
+	R[2] = <-chann[2]
+
+	for j := 0; j < 3; j++ {
+>>>>>>> ea4e55e8a30386018d69ccb044dd3fddb94a368d
 		if R[j] != E[j] {
 			t.Error("Expected and Received values are:\r\n", E[j], R[j])
 		}
