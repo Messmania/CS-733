@@ -16,9 +16,6 @@ var secs time.Duration = time.Duration(math.Pow10(9))
 var m = make(map[string]Data)
 var globMutex = &sync.Mutex{}
 
-//Global mutex
-var globMutexGet = &sync.Mutex{}
-
 type Data struct {
 	value    string
 	version  int64
@@ -30,7 +27,7 @@ type Data struct {
 
 func Server() {
 	service := ":9000"
-	tcpaddr, err := net.ResolveTCPAddr("tcp", service) // Try eliminating this later, it is not needed
+	tcpaddr, err := net.ResolveTCPAddr("tcp", service)
 	checkErr(err)
 	listener, err := net.ListenTCP("tcp", tcpaddr)
 	checkErr(err)
@@ -225,8 +222,6 @@ func checkAndExpire(m map[string]Data, key string, oldExp int64, setTime int64) 
 	return
 
 }
-
-//========SRSC==============================
 
 func Client(ch chan string, strEcho string, c string) {
 	tcpAddr, err := net.ResolveTCPAddr("tcp", ":9000")
