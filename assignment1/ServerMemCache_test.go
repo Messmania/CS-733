@@ -14,42 +14,52 @@ func TestServer(t *testing.T) {
 //Checking server's affirmative responses
 func TestResponse(t *testing.T) {
 	t.Parallel()
+	verStr := "7887"
+	const n int = 6
 	set1 := "set abc 20 5\r\nabcdefjg\r\n"
 	set2 := "set bcd 30 5\r\nefghi\r\n"
 	getm1 := "getm abc\r\n"
-	cas1 := "cas bcd 30 7887 20\r\nnewValue\r\n"
-	get2 := "get bcd\r\n"
+	getm2 := "getm bcd\r\n"
+	cas1 := "cas bcd 30 " + verStr + " 20\r\nnewValue\r\n"
 	del1 := "delete bcd\r\n"
 
 	//Expected values
 	Eset1 := "OK"
 	Egetm1 := "VALUE 20 8\r\nabcdefjg\r\n"
-	Eget2 := "VALUE 8\r\nnewValue\r\n"
+	Egetm2 := "VALUE 30 5\r\nefghi\r\n"
 	Edel1 := "DELETED\r\n"
-	E := []string{Eset1, Eset1, Egetm1, Eset1, Eget2, Edel1}
+	E := []string{Eset1, Eset1, Egetm1, Egetm2, Eset1, Edel1}
 
-	cmd := []string{set1, set2, getm1, cas1, get2, del1}
-	cd := []string{"set1", "set2", "getm1", "cas1", "get2", "del1"}
-	chann := make([]chan string, 5)
+	cmd := []string{set1, set2, getm1, getm2, cas1, del1}
+	cd := []string{"set1", "set2", "getm1", "getm2", "cas1", "del1"}
+	chann := make([]chan string, n)
 
 	//for initialing the array otherwise it is becoming nil
-	for k := 0; k < 5; k++ {
+	for k := 0; k < n; k++ {
 		chann[k] = make(chan string)
 	}
 
 	//Launching clients
-	for i := 0; i < 5; i++ {
+	for i := 0; i < n; i++ {
 		go Client(chann[i], cmd[i], cd[i])
 	}
 
-	var R [5]string
-	for j := 0; j < 5; j++ {
+	var R [n]string
+	var ver string
+	for j := 0; j < n; j++ {
 		R[j] = <-chann[j]
 		Rline := strings.Split(R[j], "\r\n")
 		r := strings.Fields(Rline[0])
-		if (j == 0) || (j == 1) || (j == 3) {
-			R[j] = r[0]
-		} else if j == 2 {
+		if (j == 0) || (j == 1) || (j == 4) {
+			if (j == 4) && (ver != verStr) {
+				E[j] = "ERR_VERSION\r\n"
+			} else {
+				R[j] = r[0]
+			}
+		} else if (j == 2) || (j == 3) {
+			if j == 3 {
+				ver = r[1]
+			}
 			R[j] = r[0] + " " + r[2] + " " + r[3] + "\r\n" + Rline[1] + "\r\n"
 		}
 		if R[j] != E[j] {
@@ -266,5 +276,3 @@ func TestNoReply(t *testing.T) {
 	}
 
 }
-
-//Set time out for reads n writes

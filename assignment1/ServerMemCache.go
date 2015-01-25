@@ -48,7 +48,7 @@ func handleClient(conn net.Conn, m map[string]Data) {
 			return
 		}
 		sr := ""
-		/*Convert command read from conn to array of strings then read them separately	*/
+		//Convert command read from conn to array of strings then read them separately
 		str := string(buf[0:n])
 		line := strings.Split(str, "\r\n")
 		cmd := strings.Fields(line[0])
@@ -150,20 +150,19 @@ func handleClient(conn net.Conn, m map[string]Data) {
 					newVersion := cmd[3]
 					numbytes := cmd[4]
 					if newVersion == oldVersion {
-						//Replace the value as old and new version are same
-						newVFloat, err := strconv.ParseInt(newVersion, 10, 64)
-						checkErr(err)
 						numBInt, err1 := strconv.ParseInt(numbytes, 10, 64)
 						checkErr(err1)
 						exp, err2 := strconv.ParseInt(cmd[2], 0, 64)
 						checkErr(err2)
+						ver := int64(rand.Intn(10000))
 						if numBInt != int64(len(value)) {
 							numBInt = int64(len(value))
 						}
-						m[key] = Data{value, newVFloat, numBInt, time.Now().Unix(), exp, &sync.Mutex{}}
+						m[key] = Data{value, ver, numBInt, time.Now().Unix(), exp, &sync.Mutex{}}
 						d.dbMutex.Unlock()
-						sr = "OK " + newVersion + "\r\n"
+						sr = "OK " + strconv.FormatInt(ver, 10) + "\r\n"
 					} else {
+						d.dbMutex.Unlock()
 						sr = "ERR_VERSION\r\n"
 					}
 				} else {
