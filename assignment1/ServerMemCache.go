@@ -56,6 +56,9 @@ func handleClient(conn net.Conn, m map[string]Data) {
 		value := line[1]
 		l := len(cmd)
 		key := cmd[1]
+		if len(key) > 250 {
+			sr = "ERRINTERNAL\r\n"
+		}
 
 		switch op {
 		case "set":
