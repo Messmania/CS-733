@@ -3,7 +3,6 @@ package Server
 import (
 	"strings"
 	"testing"
-	//"fmt"
 	"time"
 )
 
@@ -16,21 +15,19 @@ func TestServer(t *testing.T){
 //Checking server's affirmative responses
 func TestResponse(t *testing.T){
 	t.Parallel()
-	set1 := "set abc 20 10\r\nabcdefjg\r\n"
+	set1 := "set abc 20 5\r\nabcdefjg\r\n"
 	set2 := "set bcd 30 5\r\nefghi\r\n"
 	getm1 := "getm abc\r\n"
 	cas1 := "cas bcd 30 7887 20\r\nnewValue\r\n"
 	get2 := "get bcd\r\n"
 	del1 := "delete bcd\r\n"
 	
-	
-	Eset1 := "OK 8081\r\n"
-	Eset2 := "OK 7887\r\n"
-	Egetm1 := "VALUE 8081 20 10\r\nabcdefjg\r\n"
-	Ecas1 := "OK 7887\r\n"	
-	Eget2 := "VALUE 20\r\nnewValue\r\n"
+	//Expected values
+	Eset1 := "OK"
+	Egetm1 := "VALUE 20 8\r\nabcdefjg\r\n"
+	Eget2 := "VALUE 8\r\nnewValue\r\n"
 	Edel1 := "DELETED\r\n"
-	E:=[]string{Eset1,Eset2,Egetm1,Ecas1,Eget2,Edel1}
+	E:=[]string{Eset1,Eset1,Egetm1,Eset1,Eget2,Edel1}
 
 	cmd:=[]string{set1,set2,getm1,cas1,get2,del1}
 	cd:=[]string{"set1","set2","getm1","cas1","get2","del1"}
@@ -40,6 +37,8 @@ func TestResponse(t *testing.T){
 	for k:=0;k<5;k++ {
 		chann[k]=make(chan string)
 	}
+
+	//Launching clients
 	for i:=0;i<5;i++ {
 		go Client(chann[i],cmd[i],cd[i])
 	}
@@ -47,6 +46,13 @@ func TestResponse(t *testing.T){
 	var R [5]string
 	for j:=0;j<5;j++ {
 		R[j]=<-chann[j]
+		Rline:=strings.Split(R[j],"\r\n")
+		r:=strings.Fields(Rline[0])
+		if (j==0)||(j==1)||(j==3){
+			R[j]=r[0]
+		}else if j==2{
+			R[j]=r[0]+" "+r[2]+" "+r[3]+"\r\n"+Rline[1]+"\r\n"
+		}
 		if R[j]!=E[j] {			//strings.EqualFold is failing for same strings..--check later about utf-8 coding
 			t.Error("Expected and Received values are:\r\n",E[j],R[j])
 		}
@@ -54,7 +60,7 @@ func TestResponse(t *testing.T){
 
 }
 
-//PASSED =======but race conditions coming
+//PASSED
 //To check expiration and remaining exp time in getm
 func TestExpiry(t *testing.T){
 	t.Parallel()
@@ -71,7 +77,7 @@ func TestExpiry(t *testing.T){
 
 	//Expected values
 	Eset1 := "OK"
-	Egetm1 := "VALUE 1 10\r\nabcdefjg\r\n"
+	Egetm1 := "VALUE 1 8\r\nabcdefjg\r\n"
 	Egetm2 := "ERRNOTFOUND\r\n"
 	E:=[]string{Eset1,Egetm1,Egetm2}
 
@@ -92,7 +98,6 @@ func TestExpiry(t *testing.T){
 	R[1]=Rgetm1[0]+" "+Rgetm1[2]+" "+Rgetm1[3]+"\r\n"+RLine[1]+"\r\n"
 	
 	R[2]=<-chann[2]
-	
 	
 	for j:=0;j<3;j++ {
 		if R[j]!=E[j] {			
@@ -123,7 +128,7 @@ func TestErrors(t *testing.T){
 	set2:="set ms 2 11\r\nmonikasahai\r\n"
 	cas3:="cas ms 2 1092 10\r\nnewMonika\r\n"
 	
-	//==========For ERR_INTERNAL============ Not correct logically
+	//==========For ERR_INTERNAL============ 
 	msg1:="del ms"
 
 
@@ -159,16 +164,19 @@ func TestErrors(t *testing.T){
 	
 }
 
+
 //PASSED
 //Checking multiple commands send by single user
+
 func TestMultipleCmds(t *testing.T){
 	t.Parallel()
 	chann:=make(chan string)
 	const n int=4
 	cmd1:="set abc 10 10\r\ndata1\r\ngetm abc\r\ndelete abc\r\ngetm abc\r\n"
-	E:=[]string{"OK","VALUE 10 10\r\ndata1\r\n","DELETED","ERRNOTFOUND"}
-	//E:=[]string{"OK","VALUE 10 10\r\n"}
+	E:=[]string{"OK","VALUE 10 5\r\ndata1\r\n","DELETED","ERRNOTFOUND"}
+	
 	go Client(chann,cmd1,"cmd1")
+	
 	for i:=0;i<n;i++ {
 		R:=<-chann
 		Rline:=strings.Split(R,"\r\n")
@@ -187,32 +195,73 @@ func TestMultipleCmds(t *testing.T){
 
 }
 
-
-/*
-func TestNoReply(t *testing.T){
-	chann := make(chan string)
-	cmd := "set mnp 10 10 noreply\r\nabcdefjg\r\nget mnp"
-	go Client(chann,cmd,"cmd")
-	Eset3:="OK"
-	fmt.Println("before reading")
-	Rset3 := <-chann
-	fmt.Println("After reading")
-	r:=strings.Fields(Rset3)
-	Rset3=r[0]
-	if strings.EqualFold(Eset3, Rset3) != true {
-		t.Error("Expected and Received values are:\r\n", Eset3, Rset3)
+//PASSED
+//For Multiple request from multiple users
+func TestMRMC(t *testing.T){
+	t.Parallel()
+	const n int=4
+	const nC int=2
+	cmd1:="set abc 10 10\r\ndata1\r\ngetm abc\r\ndelete abc\r\ngetm abc\r\n"
+	cmd2:="set bcd 2 2\r\nmn\r\ngetm bcd\r\ndelete bcd\r\ngetm bcd\r\n"
+	E1:=[]string{"OK","VALUE 10 5\r\ndata1\r\n","DELETED","ERRNOTFOUND"}
+	E2:=[]string{"OK","VALUE 2 2\r\nmn\r\n","DELETED","ERRNOTFOUND"}
+	E:=[][]string{E1,E2}
+	cmd:=[]string{cmd1,cmd2}
+	cd:=[]string{"cmd1","cmd2"}
+	
+	//Declare and initialize channels
+	chann:=make([]chan string,n)
+	for k:=0;k<n;k++ {
+		chann[k]=make(chan string)
 	}
-}*/
+	// Launch clients
+	for j:=0;j<nC;j++ {
+		go Client(chann[j],cmd[j],cd[j])
+	}
+	for i:=0;i<nC;i++ {
+		for k:=0;k<n;k++{
+			R:=<-chann[i]
+			Rline:=strings.Split(R,"\r\n")
+			r:=strings.Fields(Rline[0])
+			if k==0 {		
+				R=r[0]
+			}else if k==1 {
+				R=r[0]+" "+r[2]+" "+r[3]+"\r\n"+Rline[1]+"\r\n"
+			}else{
+				R=Rline[0]
+			}
+			if R!=E[i][k] {			
+				t.Errorf("Expected and Received values are:\r\n%v\n%v",E[i][k],R)
+			}
+		}
+	}
 
+}
 
+//PASSED
+//Test NO reply option
+func TestNoReply(t *testing.T){
+	t.Parallel()
+	const n int=3
+	cmd := "set mnp 10 10 noreply\r\nabcdefjg\r\nset bcd 15 5\r\nmonik\r\nget mnp\r\n"
+	chann := make(chan string)
 
+	//Expected outputs
+	E:=[]string{"nr","OK","VALUE 8\r\nabcdefjg\r\n"}
 
-//Problem: Order of goroutines is not known so rand.Intn output is varying--No need to check version
-//to test noreply
-//to test concurrency
-//to test numbytes
-// to test all the ERR replies--DONE
-//to test check n expire deletion--DONE
-// to test expiry left in getm--DONE
-// when shud ERR_INTERNAL come?
-
+	go Client(chann,cmd,"mc")
+	for i:=0;i<n;i++{
+		R:=<-chann
+		Rline:=strings.Split(R,"\r\n")	
+		r:=strings.Fields(Rline[0])	
+		if i==1 {		
+			R=r[0]
+		}else if i==2{
+			R=Rline[0]+"\r\n"+Rline[1]+"\r\n"
+		}
+		if R!=E[i] {
+			t.Error("Expected and Received values are:\r\n", E, R)	
+		}
+	}
+	
+}

@@ -30,19 +30,14 @@ type Data struct  {
 
 
 func Server(){
-	//fmt.Println("Entering server\n")	
 	service:=":9000"
 	tcpaddr,err := net.ResolveTCPAddr("tcp",service) // Try eliminating this later, it is not needed
 	checkErr(err)
-	//fmt.Println("Resolve done\n")
 	listener,err := net.ListenTCP("tcp",tcpaddr)
 	checkErr(err)	
-	//fmt.Println("Listen done\n")
 	for {
-			//fmt.Println("Entering for\n")
 			conn,err := listener.Accept()
 			if err!=nil {
-			//fmt.Println("Accept failed\n")
 			continue
 			}
 			go handleClient(conn,m)
@@ -73,6 +68,9 @@ func handleClient(conn net.Conn,m map[string]Data) {
 					exp,_ :=strconv.ParseInt(cmd[2],0,64)
 					numb,_:=strconv.ParseInt(cmd[3],0,64)
 					ver:= int64(rand.Intn(10000))
+					if numb!=int64(len(value)) {
+						numb=int64(len(value))
+					}
 					globMutex.Lock()
 					m[key] = Data{value,ver,numb,time.Now().Unix(),exp,&sync.Mutex{}} 
 					d:=m[key]
@@ -88,6 +86,9 @@ func handleClient(conn net.Conn,m map[string]Data) {
 					exp,_ :=strconv.ParseInt(cmd[2],0,64)
 					numb,_:=strconv.ParseInt(cmd[3],0,64)
 					ver:= int64(rand.Intn(10000))
+					if numb!=int64(len(value)) {
+						numb=int64(len(value))
+					}
 					globMutex.Lock()
 					m[key] = Data{value,ver,numb,time.Now().Unix(),exp,&sync.Mutex{}} 
 					d:=m[key]
@@ -98,7 +99,7 @@ func handleClient(conn net.Conn,m map[string]Data) {
 						})
 					}	
 					globMutex.Unlock() 			
-					sr =""
+					sr ="nr"
 				}else {
 					sr = "ERR_CMD_ERR\r\n" 										//wrong command line format
 				}	
@@ -109,7 +110,7 @@ func handleClient(conn net.Conn,m map[string]Data) {
 					if exist!=false {
 						d.dbMutex.Lock()
 						numStr := strconv.FormatInt(d.numbytes,10)
-						sr="VALUE "+numStr+"\r\n"+d.value+"\r\n" 		
+						sr="VALUE "+numStr+"\r\n"+d.value+"\r\n" 
 						d.dbMutex.Unlock()
 					}else{
 						sr= "ERRNOTFOUND\r\n"
@@ -145,7 +146,10 @@ func handleClient(conn net.Conn,m map[string]Data) {
 						//Replace the value as old and new version are same
 						newVFloat,_:=strconv.ParseInt(newVersion,10,64) 		//check their errors as well!!
 						numBInt,_:=strconv.ParseInt(numbytes,10,64)
-						exp,_ :=strconv.ParseInt(cmd[2],0,64)
+						exp,_ :=strconv.ParseInt(cmd[2],0,64)	
+						if numBInt!=int64(len(value)) {
+							numBInt=int64(len(value))
+						}
 						m[key]=Data{value,newVFloat,numBInt,time.Now().Unix(),exp,&sync.Mutex{}}
 						d.dbMutex.Unlock()
 						sr="OK "+newVersion+"\r\n"
@@ -156,7 +160,7 @@ func handleClient(conn net.Conn,m map[string]Data) {
 						sr= "ERRNOTFOUND\r\n"
 					}
 				}else if l==6 && cmd[5]=="noreply" {
-					sr = ""
+					sr = "nr"
 				}else{
 					sr = "ERR_CMD_ERR\r\n"
 					}		
@@ -190,20 +194,23 @@ func checkErr(err error){
 }
 
 func checkAndExpire(m map[string]Data,key string,oldExp int64,setTime int64) {
-d,exist := m[key]
+	//m[key].dbMutex.Lock()	
 	absOldExp := setTime + oldExp
-	absNewExp := setTime + d.expiry	
+	d,exist := m[key]
 	if exist==false{
 	return	
 	}
-	if absOldExp!=absNewExp {	
-	return 
-	}else{	
+	d.dbMutex.Lock()	
+	absNewExp := setTime + d.expiry		
+	if absOldExp==absNewExp {		
 	delete(m,key)
-	return
+	d.dbMutex.Unlock()	
 	}
+	return
 
 }
+
+//========SRSC
 
 
 func Client(ch chan string,strEcho string, c string) {
@@ -222,8 +229,7 @@ func Client(ch chan string,strEcho string, c string) {
 		ch<-reply
 	}
 	conn.Close()
-}
-
+} 
 
 func SeparateCmds(str string)(cmd []string) {
 	line:=strings.Split(str,"\r\n")
