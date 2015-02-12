@@ -3,22 +3,35 @@ Server-Client architecture based on RAFT(SharedLog) structure with only KVStore 
 Steps to install and run:
  
 1. Set gopath to point to parent of src folder say X
+
     export GOPATH=<path>/X
+    
 2. Set PATH to include the gopath's bin
+
     export PATH=$PATH:$GOPATH/bin
     
-//Installing binaries
-3. go install serverStarter
-4. go install Read_Exec  
+3. Install the binaries
+    
+    go install serverStarter
+    
+    go install Read_Exec  
        
-//Starts the servers
-5. Read_Exec <json file's absolute path>
+5. Starts the servers
+    
+    Read_Exec <json file's absolute path>
 
-6. go test asg2_Test
+6. run Test file
+    
+    go test asg2_Test
+
 
 
 Project Partners:
-Mayuri Khardikar
-Monika Sahai
-Sushmita Bhattacharya
-Note: Already uploaded by Mayuri on cse.github before deadline
+
+    Mayuri Khardikar
+
+    Monika Sahai
+
+    Sushmita Bhattacharya
+
+Note: Assignment already uploaded by Mayuri on cse.github before deadline
