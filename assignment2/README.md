@@ -15,3 +15,10 @@ Steps to install and run:
 5. Read_Exec <json file's absolute path>
 
 6. go test asg2_Test
+
+
+Project Partners:
+Mayuri Khardikar
+Monika Sahai
+Sushmita Bhattacharya
+Note: Already uploaded by Mayuri on cse.github before deadline
