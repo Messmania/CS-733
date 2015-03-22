@@ -58,12 +58,12 @@ func NewRaft(cluster *ClusterConfig, thisServerId int, commitCh chan *LogEntry) 
 	}
 
 	//Initialise raftObj---UPDATE this according to changed raft struct--PENDING
-	clientCh := make(chan ClientAppendResponse)
+	//clientCh := make(chan ClientAppendResponse)
 	eventCh := make(chan interface{})
 	//logValue := LogVal{-1, nil}
 	myLog := []LogVal{}                                            //TO BE CHECKED
 	metaData := LogMetadata{-1, -2, -2, -1, make(map[int]int), -1} //MODIFY raftObj init
-	raftObj = &Raft{*cluster, myObj, leaderObj, 0, commitCh, clientCh, eventCh, 0, -1, 0, myLog, metaData}
+	raftObj = &Raft{*cluster, myObj, leaderObj, 0, commitCh, eventCh, 0, -1, 0, myLog, metaData}
 
 	server_raft_map[myObj.Id] = raftObj //mapping server id to its raft object
 	return raftObj, err

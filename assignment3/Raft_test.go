@@ -2,8 +2,10 @@
 package raft
 
 import (
+	//"log"
 	//"fmt"
 	//"strings"
+	//"runtime/debug"
 	"testing"
 	"time"
 )
@@ -14,6 +16,10 @@ var hostname string = "localhost"
 var port int = 9000
 
 func Test_StartServers(t *testing.T) {
+	//Just for checking threads
+	//log.Println("initial thread count:", debug.SetMaxThreads(4))
+	//log.Println("initial thread count:", debug.SetMaxThreads(5))
+
 	//make ClusterConfig object, init it and set 0 as leader for start
 	clustObj := &ClusterConfig{} //set values}
 	clustObj.Path = "null"
