@@ -100,7 +100,7 @@ type ErrRedirect int
 
 //==========================Addition for assgn3============
 //temp for testing
-const layout = "3:04:5 pm (MST)"
+//const layout = "3:04:5 pm (MST)"
 
 //For converting default time unit of ns to secs
 var secs time.Duration = time.Duration(math.Pow10(9))
@@ -247,7 +247,7 @@ func (r *Raft) candidate() int {
 	//This loop is for election process which keeps on going until a leader is elected
 	for {
 		r.currentTerm = r.currentTerm + 1 //increment current term
-		fmt.Println("I am canditate", r.Myconfig.Id, "and current term is:", r.currentTerm)
+		//fmt.Println("I am canditate", r.Myconfig.Id, "and current term is:", r.currentTerm)
 		r.votedFor, r.voteCount = r.Myconfig.Id, 1 //vote for self
 		//fmt.Println("before calling prepRV")
 		reqVoteObj := r.prepRequestVote() //prepare request vote obj
@@ -264,7 +264,7 @@ func (r *Raft) candidate() int {
 					r.voteCount = r.voteCount + 1
 				}
 				if r.voteCount >= majority {
-					fmt.Println("Votecount is majority, I am new leader", r.Myconfig.Id)
+					//fmt.Println("Votecount is majority, I am new leader", r.Myconfig.Id)
 					ElectionTimer.Stop()
 					r.LeaderConfig.Id = r.Myconfig.Id //update leader details
 					return leader                     //become the leader
@@ -302,7 +302,7 @@ func (r *Raft) candidate() int {
 
 //Keeps sending heartbeats until state changes to follower
 func (r *Raft) leader() int {
-	fmt.Println("In leader(), I am: ", r.Myconfig.Id, "at", time.Now().Format(layout))
+	fmt.Println("In leader(), I am: ", r.Myconfig.Id)
 	/*start heartbeat-sending timer, after timeout send heartbeats to all servers--using r.sendToAll(heartbeat) and keep checking
 	if it is still the leader before sending heartbeat i.e. in timeOut func if(leader) then send HB!
 	or
@@ -336,13 +336,13 @@ func (r *Raft) leader() int {
 			if response.success { //log of followers are consistent and no new leader has come up
 				ack += 1
 			} else { //retry if follower rejected the rpc
-				fmt.Println("response.term,r.currentTerm:", response.term, r.currentTerm)
+				//fmt.Println("response.term,r.currentTerm:", response.term, r.currentTerm)
 				if response.term > r.currentTerm { //this means another server is more up to date than itself
 					r.currentTerm = response.term
 					return follower
 				} else { //Log is stale and needs to be repaired!
 					//PUT THIS IN A logrepair func
-					fmt.Println("About to send AE_rpc!!")
+					//fmt.Println("About to send AE_rpc!!")
 					id := response.followerId
 					failedIndex := r.myMetaData.nextIndexMap[id]
 					nextIndex := failedIndex - 1 //decrementing follower's nextIndex
@@ -386,7 +386,7 @@ func (r *Raft) leader() int {
 			}
 
 		case int: //Time out-time to send Heartbeats!
-			fmt.Println("\n\nTime to send HBs!")
+			//fmt.Println("\n\nTime to send HBs!")
 			timeout := req.(int)
 			//fmt.Println("Timeout is of type:", timeout, HeartbeatTimeout)
 			r.sendAppendEntriesRPC() //send Heartbeats
@@ -438,7 +438,7 @@ func (r *Raft) serviceAppendEntriesReq(request AppendEntriesReq, HeartBeatTimer 
 	//		waitTime_secs = 1
 	//	}
 	//===Testing ends==========
-	fmt.Println("Hearbeat came to", r.Myconfig.Id, "my and request terms are:", r.currentTerm, request.term)
+	//fmt.Println("Hearbeat came to", r.Myconfig.Id, "my and request terms are:", r.currentTerm, request.term)
 	appEntriesResponse := AppendEntriesResponse{}
 	appEntriesResponse.followerId = r.Myconfig.Id
 	appEntriesResponse.success = false //false by default
@@ -469,7 +469,7 @@ func (r *Raft) serviceAppendEntriesReq(request AppendEntriesReq, HeartBeatTimer 
 		}
 	}
 	appEntriesResponse.term = r.currentTerm
-	fmt.Printf("Response sent by %v is : %v\n", r.Myconfig.Id, appEntriesResponse.success)
+	//fmt.Printf("Response sent by %v is : %v\n", r.Myconfig.Id, appEntriesResponse.success)
 	send(request.leaderId, appEntriesResponse)
 	//fmt.Printf("Follower %v sent the AE_ack to %v \n", r.Myconfig.Id, request.leaderId)
 }
@@ -494,7 +494,7 @@ func (r *Raft) serviceRequestVote(request RequestVote) {
 	}
 	//	}
 
-	fmt.Println("Follower", r.Myconfig.Id, "voting", response.voteGranted) //"because votefor is", r.votedFor, "my and request terms are:", r.currentTerm, request.term)
+	//fmt.Println("Follower", r.Myconfig.Id, "voting", response.voteGranted) //"because votefor is", r.votedFor, "my and request terms are:", r.currentTerm, request.term)
 	//fmt.Println("Follower", r.Myconfig.Id, "Current term is", r.currentTerm, "Self lastLogIndex is", r.myMetaData.lastLogIndex)
 	//fmt.Println("VotedFor,request.lastLogTerm", r.votedFor, request.lastLogTerm)
 

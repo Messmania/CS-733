@@ -36,7 +36,7 @@ func Test_StartServers(t *testing.T) {
 	r3 = ServerStart(clustObj, 3)
 	r4 = ServerStart(clustObj, 4)
 
-	fmt.Println("Raft objects are:", r0, r1, r2, r3, r4)
+	//fmt.Println("Raft objects are:", r0, r1, r2, r3, r4)
 	//Firing server SM in parallel
 
 	//In code, leader sends HBs every 2sec , so keep timeout of follower more than that
