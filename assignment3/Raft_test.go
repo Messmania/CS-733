@@ -2,10 +2,11 @@
 package raft
 
 import (
-	"fmt"
 	//"log"
+	//"fmt"
 	//"strings"
 	//"runtime/debug"
+	"fmt"
 	//"math/rand"
 	"testing"
 	"time"
@@ -39,7 +40,6 @@ func Test_StartServers(t *testing.T) {
 	r3 = ServerStart(clustObj, 3)
 	r4 = ServerStart(clustObj, 4)
 
-	//fmt.Println("Raft objects are:", r0, r1, r2, r3, r4)
 	//Firing server SM in parallel
 
 	//In code, leader sends HBs every 2sec , so keep timeout of follower more than that
@@ -67,7 +67,7 @@ func Test_StartServers(t *testing.T) {
 
 //PASSED
 func Test_SingleClientAppend_ToLeader(t *testing.T) {
-	fmt.Println("Testing single client append to leader")
+	//fmt.Println("Testing single client append to leader")
 	set1 := "set abc 20 8\r\nabcdefjg\r\n"
 	expected := true
 	response, err := r1.Append([]byte(set1))
@@ -79,7 +79,7 @@ func Test_SingleClientAppend_ToLeader(t *testing.T) {
 	if expected != commitStatus {
 		t.Error("Mismatch!", expected, string(response.Data()))
 	}
-	fmt.Println("Test SingleCA_Leader finished")
+	//fmt.Println("Test SingleCA_Leader finished")
 }
 
 //PASSED
@@ -96,7 +96,7 @@ func Test_MultipleClientAppends_ToLeader(t *testing.T) {
 	response := [n]LogEntry{}
 	err := [n]error{nil, nil}
 	expected := true
-	fmt.Println("Testing MultipleCA to leader")
+	//fmt.Println("Testing MultipleCA to leader")
 	for i := 0; i < n; i++ {
 		response[i], err[i] = r1.Append([]byte(cmd[i]))
 	}
@@ -111,7 +111,7 @@ func Test_MultipleClientAppends_ToLeader(t *testing.T) {
 		}
 	}
 
-	fmt.Println("Test MCA_leader completed")
+	//fmt.Println("Test MCA_leader completed")
 
 }
 
@@ -147,11 +147,6 @@ func Test_ClientAppendToFollowers(t *testing.T) {
 
 func Test_CommitEntryFromCurrentTerm(t *testing.T) {
 	//TestSCA and MCA are checking this , coz once entry is commited then only client gets the response
-
-}
-
-func Test_CommitEntryFromPrevTerm(t *testing.T) {
-	//crash one follower, and then wake him up after 3 term changes (leader elections?) may be
 }
 
 //PASSED
@@ -220,4 +215,9 @@ func Test_LogRepair(t *testing.T) {
 	//now Server1's log gets repaired when it starts receiving Heartbeats during this time period--HOW TO TEST?
 	a := time.Duration(1)
 	time.Sleep(time.Second * a)
+}
+
+func Test_CommitEntryFromPrevTerm(t *testing.T) {
+	//crash one follower, and then wake him up after 3 term changes (leader elections?) may be
+
 }
