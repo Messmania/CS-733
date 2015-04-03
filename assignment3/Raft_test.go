@@ -68,8 +68,9 @@ func Test_SingleClientAppend_ToLeader(t *testing.T) {
 	//fmt.Println("Testing single client append to leader")
 	set1 := "set abc 20 8\r\nabcdefjg\r\n"
 	expected := true
-	go r1.Append([]byte(set1))
-	response := *(<-r1.commitCh)
+	myChan := make(chan LogEntry)
+	go r1.Client(myChan, set1)
+	response := <-myChan
 	commitStatus := response.Committed()
 	if expected != commitStatus {
 		t.Error("Mismatch!", expected, string(response.Data()))
@@ -85,15 +86,20 @@ func Test_MultipleClientAppends_ToLeader(t *testing.T) {
 	getm1 := "getm abc\r\n"
 	getm2 := "getm bcd\r\n"
 	del1 := "delete bcd\r\n"
+	chann := make([]chan LogEntry, n)
 
 	cmd := []string{set1, set2, getm1, getm2, del1}
 	expected := true
 	//fmt.Println("Testing MultipleCA to leader")
-	for i := 0; i < n; i++ {
-		go r1.Append([]byte(cmd[i]))
+
+	for k := 0; k < n; k++ {
+		chann[k] = make(chan LogEntry)
 	}
 	for i := 0; i < n; i++ {
-		response := *(<-r1.commitCh)
+		go r1.Client(chann[i], cmd[i])
+	}
+	for i := 0; i < n; i++ {
+		response := <-chann[i]
 		commitStatus := response.Committed()
 		if expected != commitStatus {
 			t.Error("Mismatch!", expected, string(response.Data()))
@@ -112,14 +118,20 @@ func Test_ClientAppendToFollowers(t *testing.T) {
 	const n int = 4
 	set1 := "set abc 20 8\r\nabcdefjg\r\n"
 	expected := false
+	chann := make([]chan LogEntry, n)
+
+	for k := 0; k < n; k++ {
+		chann[k] = make(chan LogEntry)
+	}
+
 	r := [n]*Raft{r0, r2, r3, r4}
 	for i := 0; i < n; i++ {
-		go r[i].Append([]byte(set1))
+		go r[i].Client(chann[i], set1)
 	}
 
 	//response := <-r1.commitCh
 	for i := 0; i < n; i++ {
-		response := *(<-r[i].commitCh)
+		response := <-chann[i]
 		commitStatus := response.Committed()
 		if expected != commitStatus {
 			t.Error("Mismatch!", expected, string(response.Data()))
@@ -149,12 +161,17 @@ func Test_LeaderChanges(t *testing.T) {
 	const n int = 4
 	set1 := "set abc 20 8\r\nabcdefjg\r\n"
 	expected := []bool{false, true, false, false}
+	chann := make([]chan LogEntry, n)
 	r := [n]*Raft{r0, r2, r3, r4}
-	for i := 0; i < n; i++ {
-		go r[i].Append([]byte(set1))
+	for k := 0; k < n; k++ {
+		chann[k] = make(chan LogEntry)
 	}
 	for i := 0; i < n; i++ {
-		response := *(<-r[i].commitCh)
+		go r[i].Client(chann[i], set1)
+	}
+
+	for i := 0; i < n; i++ {
+		response := <-chann[i]
 		commitStatus := response.Committed()
 		if expected[i] != commitStatus {
 			t.Error("Mismatch!", expected, string(response.Data()))
@@ -175,11 +192,16 @@ func Test_LogRepair(t *testing.T) {
 	getm3 := "getm abc\r\n"
 	cmd := []string{set1, set3, set4, getm3}
 	expected := true
+	chann := make([]chan LogEntry, n)
+	for k := 0; k < n; k++ {
+		chann[k] = make(chan LogEntry)
+	}
+
 	for i := 0; i < n; i++ {
-		go r2.Append([]byte(cmd[i]))
+		go r2.Client(chann[i], cmd[i])
 	}
 	for i := 0; i < n; i++ {
-		response := *(<-r2.commitCh)
+		response := <-chann[i]
 		commitStatus := response.Committed()
 		if expected != commitStatus {
 			t.Error("Mismatch!", expected, response.Committed())
