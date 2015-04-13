@@ -6,7 +6,7 @@ import (
 	"net"
 	"strconv"
 	//"time"
-	"log"
+	//	"log"
 )
 
 func (r *Raft) connHandler(timeout int) {
@@ -87,7 +87,7 @@ func (r *Raft) writeToEvCh(conn net.Conn) {
 	registerTypes()
 	msg, err := DecodeInterface(conn)
 	if err != nil {
-		checkErr("Error in writeToEvCh(),DecodeInterface", err)
+		//checkErr("Error in writeToEvCh(),DecodeInterface", err)
 		return //added on 13th 5: am while modifying checkErr signature
 	}
 	//conn.Close() //--moved here from DecodeInterface so that handleClient can use DecodeInterface too
@@ -109,8 +109,7 @@ func DecodeInterface(conn net.Conn) (interface{}, error) {
 	var obj_dec interface{}
 	err_dec := dec_net.Decode(&obj_dec)
 	if err_dec != nil {
-		//fmt.Println("Err in decoding", err_dec)
-		log.Println("In DecodeInterface, err is:", err_dec)
+		//checkErr("In DecodeInterface, err is:", err_dec)
 		return nil, err_dec
 
 	}
@@ -121,10 +120,7 @@ func DecodeInterface(conn net.Conn) (interface{}, error) {
 
 func (r *Raft) handleClient(conn net.Conn) {
 	for {
-		//if conn != nil { //keep looping till client closes the conn, usefull only if for loop is uncommented
-		//fmt.Println("In handleClient", r.myId())
 		msg, err := DecodeInterface(conn)
-		//fmt.Println("In handleClient,msg decoded is:", msg)
 		if err == nil {
 			cmd := []byte(msg.(string))
 			//fmt.Println("Decoded cmd is:", msg.(string))

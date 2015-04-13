@@ -402,15 +402,48 @@ func TestMRSC(t *testing.T) {
 
 }
 
-/*
-func TestMRMC(t *testing.T) {}
-
-func Test_CommitEntryFromPrevTerm(t *testing.T) {
-	//not able to simulate the scenario for now
-	//leader appends entries to its log and crashes, comes back up before anyone else timesout, now testing can be done
-	//crash leader 2 for less than 2 msec, which is next viable leader's timeout i.e. S1
-	//i.e. before its RetryTimer times out??
-	//reduce retry timer to 4, so that it comes up at 5 as follower and times out and restarts the elections--check the numbers again
+func TestMRMC(t *testing.T) {
+	port = 9002
+	const n int = 4  //No. of cmds per client
+	const nC int = 2 //No.of clients
+	cmd1 := "set abc 10 5\r\ndata1\r\ngetm abc\r\ndelete abc\r\ngetm abc\r\n"
+	cmd2 := "set bcd 2 2\r\nmn\r\ngetm bcd\r\ndelete bcd\r\ngetm bcd\r\n"
+	E := []string{"OK", "VALUE 5\r\ndata1", "VALUE 2\r\nmn", "DELETED", "ERRNOTFOUND"}
+	cmd := []string{cmd1, cmd2}
+	//Declare and initialize channels
+	chann := make([]chan string, n)
+	for k := 0; k < nC; k++ {
+		chann[k] = make(chan string)
+	}
+	// Launch clients
+	for j := 0; j < nC; j++ {
+		go Client(chann[j], cmd[j], hostname, port)
+	}
+	for j := 0; j < nC; j++ {
+		for k := 0; k < n; k++ {
+			R := <-chann[j]
+			Result := ""
+			matched := 0
+			RLine := strings.Split(R, "\r\n")
+			R1 := strings.Fields(RLine[0])
+			if RLine[1] == "" {
+				//for set,err,deleted response: OK <ver>\r\n
+				Result = R1[0]
+			} else if len(RLine) == 3 {
+				//For getm response: VALUE <ver> <exp> <numbytes>\r\n<dataBytes>\r\n
+				Result = R1[0] + " " + R1[3] + "\r\n" + RLine[1]
+			}
+			//Checking from the list of expected responses
+			for i := 0; i < 5; i++ {
+				if Result == E[i] {
+					matched = 1
+				}
+			}
+			//Every response must match one of the responses in array E
+			if matched != 1 {
+				t.Error("Received values are:\r\n", Result)
+			}
+		}
+	}
 
 }
-*/
