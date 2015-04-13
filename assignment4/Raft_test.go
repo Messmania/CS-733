@@ -186,7 +186,7 @@ func Test_ServerCrash_(t *testing.T) {
 	setCrash(true)
 	setServerToCrash(1)
 	//	fmt.Println("\n=========Server 1 crashed now!============\n")
-	w := msecs * time.Duration(10)
+	w := msecs * time.Duration(15)
 	//time.Sleep(time.Second * 2) //giving time to elect a new leader
 	time.Sleep(w)
 
