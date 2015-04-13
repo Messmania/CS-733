@@ -69,7 +69,7 @@ func kvStoreProcessing(logEntry *LogEntry) {
 			numBStr := cmd[3]
 			expStr := cmd[2]
 			numb, err1 := strconv.ParseInt(numBStr, 0, 64)
-			checkErr(err1)
+			checkErr("Error in kvStoreProc,strconv.ParseInt(numBStr, 0, 64)", err1)
 			sr = setFields(expStr, numb, value, key, l, op)
 		} else {
 			sr = "ERR_CMD_ERR\r\n"
@@ -91,7 +91,7 @@ func kvStoreProcessing(logEntry *LogEntry) {
 				numBStr := cmd[4]
 				expStr := cmd[3]
 				numb, err1 := strconv.ParseInt(numBStr, 0, 64)
-				checkErr(err1)
+				checkErr("Error in cas", err1)
 				if newVersion == oldVersion {
 					sr = setFields(expStr, numb, value, key, l, op)
 				} else {
@@ -132,7 +132,7 @@ func setFields(expStr string, numb int64, value string, key string, l int, op st
 	timer := oldTimer
 	//Conversion from string to apt data type
 	exp, err := strconv.ParseInt(expStr, 0, 64)
-	checkErr(err)
+	checkErr("Error in setFields", err)
 
 	ver := int64(rand.Intn(10000))
 
@@ -230,9 +230,10 @@ func checkAndExpire(key string, oldExp int64, setTime int64) {
 	return
 }
 
-func checkErr(err error) {
+func checkErr(msg string, err error) {
 	if err != nil {
-		log.Println("Error encountered in KVStore.go:", err)
+		//log.Println("Error encountered in KVStore.go:", err)
+		log.Println(msg, err)
 
 	}
 }

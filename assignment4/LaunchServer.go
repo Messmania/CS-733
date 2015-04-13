@@ -10,9 +10,6 @@ import (
 	//"time"
 )
 
-//Global map for serverid->raftObj mapping
-//var server_raft_map = make(map[int]*Raft)
-
 const (
 	follower  = iota
 	leader    = iota
@@ -26,7 +23,7 @@ func ServerStart(cluster *ClusterConfig, thisServerId int, timeout int) {
 	raftObj, err := NewRaft(cluster, thisServerId, commitCh)
 	//fmt.Println("Raft obj:", raftObj)
 	if err != nil {
-		checkErr(err)
+		checkErr("Error in ServerStart(),NewRaft call", err)
 		return ///os.exit? since server failed to initialize??
 	} else {
 		raftObj.connHandler(timeout)
@@ -73,8 +70,6 @@ func NewRaft(cluster *ClusterConfig, thisServerId int, commitCh chan *LogEntry) 
 	metaData := LogMetaData{-1, -2, -2, -1, nextIndexMap}
 
 	raftObj = &Raft{*cluster, myObj, leaderObj, 0, commitCh, eventCh, -1, -1, myLog, metaData, f_details, pathString_CV, pathString_Log}
-
-	//server_raft_map[myObj.Id] = raftObj //NOT NEEDED NOW--REMOVE
 
 	return raftObj, err
 }
@@ -127,9 +122,4 @@ func CreateDiskFiles(thisServerId int) (pathString_CV string, pathString_Log str
 	//fmt.Print("Paths are:", pathString_CV, pathString_Log)
 	return pathString_CV, pathString_Log
 
-}
-
-//=================For launching server in a separate process===
-func main() {
-	//	fmt.Println("In main")
 }

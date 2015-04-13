@@ -2,10 +2,11 @@ package raft
 
 import (
 	"encoding/gob"
-	//	"fmt"
+	//"fmt"
 	"net"
 	"strconv"
 	//"time"
+	"log"
 )
 
 func (r *Raft) connHandler(timeout int) {
@@ -23,13 +24,13 @@ func (r *Raft) listenToServers() {
 	service := r.Myconfig.Hostname + ":" + strconv.Itoa(port)
 	tcpaddr, err := net.ResolveTCPAddr("tcp", service)
 	if err != nil {
-		checkErr(err)
+		checkErr("Error in listenToServers(),ResolveTCPAddr", err)
 		return
 	} else {
 		//fmt.Println("No error!")
 		listener, err := net.ListenTCP("tcp", tcpaddr)
 		if err != nil {
-			checkErr(err)
+			checkErr("Error in listenToServers(),ListenTCP", err)
 			//fmt.Println("Error after Listen")
 			return
 		} else {
@@ -39,7 +40,7 @@ func (r *Raft) listenToServers() {
 				//fmt.Println(r.myId(), "Accepted!,conn:", conn)
 				if err != nil {
 					//					fmt.Println("Err in listener.Accept")
-					checkErr(err)
+					checkErr("Error in listenToServers(),Accept", err)
 					continue
 				} else if conn != nil { //Added if to remove nil pointer reference error
 					go r.writeToEvCh(conn)
@@ -55,12 +56,12 @@ func (r *Raft) listenToClients() {
 	service := r.Myconfig.Hostname + ":" + strconv.Itoa(port)
 	tcpaddr, err := net.ResolveTCPAddr("tcp", service)
 	if err != nil {
-		checkErr(err)
+		checkErr("Error in listenToClients(),ResolveTCPAddr", err)
 		return
 	} else {
 		listener, err := net.ListenTCP("tcp", tcpaddr)
 		if err != nil {
-			checkErr(err)
+			checkErr("Error in listenToClients(),ListenTCP", err)
 			return
 		} else {
 			for {
@@ -84,7 +85,11 @@ func (r *Raft) listenToClients() {
 func (r *Raft) writeToEvCh(conn net.Conn) {
 	//fmt.Println("In write to evCh", r.myId())
 	registerTypes()
-	msg := DecodeInterface(conn)
+	msg, err := DecodeInterface(conn)
+	if err != nil {
+		checkErr("Error in writeToEvCh(),DecodeInterface", err)
+		return //added on 13th 5: am while modifying checkErr signature
+	}
 	//conn.Close() //--moved here from DecodeInterface so that handleClient can use DecodeInterface too
 	r.EventCh <- msg
 }
@@ -99,51 +104,54 @@ func registerTypes() {
 }
 
 //For decoding the values
-func DecodeInterface(conn net.Conn) interface{} {
+func DecodeInterface(conn net.Conn) (interface{}, error) {
 	dec_net := gob.NewDecoder(conn)
 	var obj_dec interface{}
 	err_dec := dec_net.Decode(&obj_dec)
 	if err_dec != nil {
 		//fmt.Println("Err in decoding", err_dec)
-		return nil
+		log.Println("In DecodeInterface, err is:", err_dec)
+		return nil, err_dec
+
 	}
 	//fmt.Printf("After decoding from gob,type is %T \n", obj_dec)
 	//fmt.Printf("decoded value %T %v \n", obj_dec, obj_dec)
-	return obj_dec
+	return obj_dec, nil
 }
 
 func (r *Raft) handleClient(conn net.Conn) {
-	//for {
-	//if conn != nil { //keep looping till client closes the conn, usefull only if for loop is uncommented
-	//fmt.Println("In handleClient", r.myId())
-	msg := DecodeInterface(conn)
-	//msg := Decode(conn) // for testing only
-	//fmt.Println("In handleClient,msg decoded is:", msg)
-	if msg != nil {
-		cmd := []byte(msg.(string))
-		//fmt.Println("Decoded cmd is:", msg.(string))
-		logEntry, err := r.Append(cmd)
-		//fmt.Println("In handleClient after calling append")
-		//write the logEntry:conn to map
-		connMapMutex.Lock()
-		connLog[&logEntry] = conn
-		connMapMutex.Unlock()
-
+	for {
+		//if conn != nil { //keep looping till client closes the conn, usefull only if for loop is uncommented
+		//fmt.Println("In handleClient", r.myId())
+		msg, err := DecodeInterface(conn)
+		//fmt.Println("In handleClient,msg decoded is:", msg)
 		if err == nil {
-			//r.CommitCh <- (&logEntry)
-			//fmt.Println("KVStore launched")
-			//go kvStoreProcessing(r.CommitCh)
-			go kvStoreProcessing(&logEntry)
+			cmd := []byte(msg.(string))
+			//fmt.Println("Decoded cmd is:", msg.(string))
+			logEntry, err := r.Append(cmd)
+			//fmt.Println("In handleClient after calling append")
+			//write the logEntry:conn to map
+			connMapMutex.Lock()
+			connLog[&logEntry] = conn
+			connMapMutex.Unlock()
 
+			if err == nil {
+				//r.CommitCh <- (&logEntry)
+				//fmt.Println("KVStore launched")
+				//go kvStoreProcessing(r.CommitCh)
+				go kvStoreProcessing(&logEntry)
+
+			} else {
+				//REDUNTANT: Leader info is already known and present in raftObj, so err is useless for now
+				ldrHost, ldrPort := r.LeaderConfig.Hostname, r.LeaderConfig.ClientPort
+				errRedirectStr := "ERR_REDIRECT " + ldrHost + " " + strconv.Itoa(ldrPort)
+				EncodeInterface(conn, errRedirectStr)
+				//_, err1 := conn.Write([]byte(errRedirectStr))
+				//checkErr(err1)
+			}
 		} else {
-			//REDUNTANT: Leader info is already known and present in raftObj, so err is useless for now
-			ldrHost, ldrPort := r.LeaderConfig.Hostname, r.LeaderConfig.ClientPort
-			errRedirectStr := "ERR_REDIRECT " + ldrHost + " " + strconv.Itoa(ldrPort)
-			EncodeInterface(conn, errRedirectStr)
-			//_, err1 := conn.Write([]byte(errRedirectStr))
-			//checkErr(err1)
+			//			fmt.Println("Exiting handleClient since conn is closed")
+			break
 		}
 	}
-	//}
-	//}
 }

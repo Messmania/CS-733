@@ -2,8 +2,8 @@
 package raft //for now, later keep it in above pkg
 
 import (
-	//"log"
-	//	"fmt"
+	//"fmt"
+	"log"
 	"net"
 	"strconv"
 	"strings"
@@ -12,12 +12,10 @@ import (
 func Client(ch chan string, strEcho string, hostname string, port int) {
 	service := hostname + ":" + strconv.Itoa(port)
 	tcpAddr, err := net.ResolveTCPAddr("tcp", service)
-	checkErr(err)
+	checkErr("Error in Client(), ResolveTCPAddr", err)
 	conn, err := net.DialTCP("tcp", nil, tcpAddr)
-	//for testing
-	//conn.Close()
 	if err != nil {
-		checkErr(err)
+		checkErr("Error in Client(),DailTCP", err)
 		return
 	} else {
 		//fmt.Println("Conn dialed at client side,conn:", conn)
@@ -27,7 +25,11 @@ func Client(ch chan string, strEcho string, hostname string, port int) {
 			msg := cmd[i]
 			EncodeInterface(conn, msg)
 			//fmt.Println("Encoding done, in Client connH", msg)
-			rep := DecodeInterface(conn)
+			rep, err := DecodeInterface(conn)
+			if err != nil {
+				log.Println("Error in Client(),", err)
+				return
+			}
 			//			fmt.Println("Decoding done, in Client connH", rep)
 			reply := rep.(string)
 
@@ -35,8 +37,9 @@ func Client(ch chan string, strEcho string, hostname string, port int) {
 			ch <- reply
 		}
 	}
-	conn.Close()
-	//fmt.Println("In client, conn closed", conn)
+	err1 := conn.Close()
+	checkErr("Error in Client, closing conn", err1)
+	//	fmt.Println("In client, conn closed", conn, err1)
 }
 
 //For separating multiple cmds in a single string (MRMC case)
@@ -69,11 +72,3 @@ func SeparateCmds(str string) (cmd []string) {
 	}
 	return
 }
-
-/*
-func checkErr(err error) {
-	if err != nil {
-		log.Println("Error encountered in connHandler:", err)
-
-	}
-} */
