@@ -1,8 +1,8 @@
-//package clientCH
-package raft //for now, later keep it in above pkg
+package clientCH
 
 import (
-	//"fmt"
+	"encoding/gob"
+	"fmt"
 	"log"
 	"net"
 	"strconv"
@@ -22,24 +22,39 @@ func Client(ch chan string, strEcho string, hostname string, port int) {
 		cmd := SeparateCmds(strEcho)
 		//		fmt.Println("cmd separated is:", cmd)
 		for i := 0; i < len(cmd); i++ {
+
 			msg := cmd[i]
-			EncodeInterface(conn, msg)
-			//fmt.Println("Encoding done, in Client connH", msg)
-			rep, err := DecodeInterface(conn)
+			EncodeInterface_Client(conn, msg) //--removed for checking conn.Read
+
+			//	fmt.Println("Encoding done, in Client connH", msg)
+			rep, err := DecodeInterface_Client(conn)
 			if err != nil {
-				log.Println("Error in Client(),", err)
+				fmt.Println("Error in client() decode")
+				checkErr("Error in Client(),", err)
 				return
 			}
-			//			fmt.Println("Decoding done, in Client connH", rep)
+			//	fmt.Println("Decoding done, in Client connH", rep)
 			reply := rep.(string)
 
-			//fmt.Println("In client, reply is", reply)
+			//	fmt.Println("In client, reply is", reply)
 			ch <- reply
+			/*
+
+				conn.Write([]byte(cmd[i]))
+				var rep [512]byte
+				n, err1 := conn.Read(rep[0:])
+				if err1 != nil {
+					checkErr("In Client(),Error in Reading from conn", err1)
+				}
+				reply := string(rep[0:n])
+				ch <- reply
+			*/
 		}
 	}
 	err1 := conn.Close()
-	checkErr("Error in Client, closing conn", err1)
-	//	fmt.Println("In client, conn closed", conn, err1)
+	if err1 != nil {
+		checkErr("Error in Client, closing conn", err1)
+	}
 }
 
 //For separating multiple cmds in a single string (MRMC case)
@@ -71,4 +86,34 @@ func SeparateCmds(str string) (cmd []string) {
 		}
 	}
 	return
+}
+
+func checkErr(msg string, err error) {
+	if err != nil {
+		log.Println(msg, err)
+
+	}
+}
+
+//For decoding the values
+func DecodeInterface_Client(conn net.Conn) (interface{}, error) {
+
+	dec_net := gob.NewDecoder(conn)
+	var obj_dec interface{}
+	err_dec := dec_net.Decode(&obj_dec)
+	if err_dec != nil {
+		checkErr("In DecodeInterface of client, err is:", err_dec)
+		return nil, err_dec
+
+	}
+	return obj_dec, nil
+}
+
+func EncodeInterface_Client(conn net.Conn, msg interface{}) {
+	//	registerTypes()
+	enc_net := gob.NewEncoder(conn)
+	err_enc := enc_net.Encode(&msg)
+	if err_enc != nil {
+		checkErr("Error in EncodeInterface of client", err_enc)
+	}
 }

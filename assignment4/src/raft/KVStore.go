@@ -2,7 +2,7 @@ package raft
 
 import (
 	//"fmt"
-	"log"
+	//	"log"
 	//	"math"
 	"math/rand"
 	"net"
@@ -38,7 +38,7 @@ type Data struct {
 }
 
 //func kvStoreProcessing(commitCh chan *LogEntry) {
-func kvStoreProcessing(logEntry *LogEntry) {
+func (r *Raft) kvStoreProcessing(logEntry *LogEntry) {
 	//	fmt.Println("In kvprocessing", *logEntry)
 	//logEntry := <-commitCh
 	connMapMutex.RLock()
@@ -110,13 +110,7 @@ func kvStoreProcessing(logEntry *LogEntry) {
 		sr = "ERRINTERNAL\r\n"
 	}
 
-	//	fmt.Println("In kvstoreproc, about to write to conn")
-	//_, err2 := conn.Write([]byte(sr))
-	EncodeInterface(conn, sr)
-	//	fmt.Println("In kvstoreproc, wrote to conn:-", sr, "for cmd:", request)
-	//	if err2 != nil {
-	//		return
-	//	}
+	r.EncodeInterface(conn, sr)
 
 }
 
@@ -233,7 +227,7 @@ func checkAndExpire(key string, oldExp int64, setTime int64) {
 func checkErr(msg string, err error) {
 	if err != nil {
 		//log.Println("Error encountered in KVStore.go:", err)
-		log.Println(msg, err)
+		//log.Println(msg, err)
 
 	}
 }

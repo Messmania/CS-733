@@ -3,12 +3,16 @@ package raft
 //package main
 
 import (
-	//"fmt"
-	"log"
+	"fmt"
+	//"log"
 	"os"
 	"strconv"
 	//"time"
+	"sync"
 )
+
+//Global map for serverid->raftObj mapping
+//var server_raft_map = make(map[int]*Raft)
 
 const (
 	follower  = iota
@@ -18,7 +22,7 @@ const (
 
 //===============================================++A-3:NEW CODE+++============================================
 
-func ServerStart(cluster *ClusterConfig, thisServerId int, timeout int) {
+func ServerStart(cluster *ClusterConfig, thisServerId int, ftimeout int, etimeout int) {
 	commitCh := make(chan *LogEntry, 4)
 	raftObj, err := NewRaft(cluster, thisServerId, commitCh)
 	//fmt.Println("Raft obj:", raftObj)
@@ -26,7 +30,7 @@ func ServerStart(cluster *ClusterConfig, thisServerId int, timeout int) {
 		checkErr("Error in ServerStart(),NewRaft call", err)
 		return ///os.exit? since server failed to initialize??
 	} else {
-		raftObj.connHandler(timeout)
+		raftObj.connHandler(ftimeout, etimeout)
 	}
 }
 
@@ -56,7 +60,7 @@ func NewRaft(cluster *ClusterConfig, thisServerId int, commitCh chan *LogEntry) 
 			myObj.LogPort = servArr[i].LogPort
 		}
 		nextIndexMap[i] = -1 //initialising nextIndexes for all in each server
-		f_obj := followerDetails{false}
+		f_obj := followerDetails{false, nil}
 		f_details[i] = &f_obj
 	}
 
@@ -68,25 +72,27 @@ func NewRaft(cluster *ClusterConfig, thisServerId int, commitCh chan *LogEntry) 
 	myLog := make([]LogVal, 0, 10)
 
 	metaData := LogMetaData{-1, -2, -2, -1, nextIndexMap}
+	f_specificMutex := &sync.RWMutex{}
+	raftObj = &Raft{*cluster, myObj, leaderObj, 0, commitCh, eventCh, -1, -1, myLog, metaData, f_details, pathString_CV, pathString_Log, f_specificMutex}
 
-	raftObj = &Raft{*cluster, myObj, leaderObj, 0, commitCh, eventCh, -1, -1, myLog, metaData, f_details, pathString_CV, pathString_Log}
-
+	//server_raft_map[myObj.Id] = raftObj //NOT NEEDED NOW--REMOVE
+	fmt.Println("Exiting NewRaft")
 	return raftObj, err
 }
 
 //=====================++New Code++=========================
 
 //timeout param added Only for testing
-func (r *Raft) ServerSM(timeout int) {
+func (r *Raft) ServerSM(f int, e int) {
 	state := follower //how to define type for this?--const
 	for {
 		switch state {
 		case follower:
 			//fmt.Println("in case follower")
-			state = r.follower(timeout)
+			state = r.follower(f)
 		case candidate:
 			//fmt.Println("in case candidate of ServSM()")
-			state = r.candidate()
+			state = r.candidate(e)
 		case leader:
 			//fmt.Println("in case leader")
 			state = r.leader()
@@ -98,28 +104,30 @@ func (r *Raft) ServerSM(timeout int) {
 }
 
 func CreateDiskFiles(thisServerId int) (pathString_CV string, pathString_Log string) {
-	//Setting paths of disk files
-	pathString_Log = "./Disk_Files/S" + strconv.Itoa(thisServerId) + "/Log.log"
-	pathString_CV = "./Disk_Files/S" + strconv.Itoa(thisServerId) + "/CV.log"
-
-	//Creating files
-	fh_cv, err_cv := os.Create(pathString_CV)
-
-	if err_cv != nil {
-		log.Println("Error creating cv file", err_cv)
-		panic(err_cv)
-	} else {
-		fh_cv.Close()
+	folderString := "./DiskLog/S" + strconv.Itoa(thisServerId)
+	err := os.MkdirAll(folderString, 0777)
+	if err != nil {
+		checkErr("Error in creating directory DiskLog", err)
+		panic(err)
 	}
-	fh_log, err_log := os.Create(pathString_Log)
 
-	if err_log != nil {
-		log.Println("Error creating log file", err_log)
-		panic(err_log)
+	pathString_CV = folderString + "/CV.log"
+	pathString_Log = folderString + "/Log.log"
+	fhcv, err1 := os.Create(pathString_CV)
+	if err1 != nil {
+		checkErr("Error in creating file CV.log", err)
+		panic(err1)
 	} else {
-		fh_log.Close()
+		fhcv.Close()
 	}
-	//fmt.Print("Paths are:", pathString_CV, pathString_Log)
+
+	fhlog, err2 := os.Create(pathString_Log)
+	if err2 != nil {
+		checkErr("Error in creating file Log.log", err)
+		panic((err2))
+	} else {
+		fhlog.Close()
+	}
 	return pathString_CV, pathString_Log
 
 }
