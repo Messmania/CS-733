@@ -106,7 +106,7 @@ func CreateDiskFiles(thisServerId int) (pathString_CV string, pathString_Log str
 	pathString_CV = folderString + "/CV.log"
 	pathString_Log = folderString + "/Log.log"
 	_, err := os.Stat(folderString)
-	if err == nil {
+	if err != nil {
 		err := os.MkdirAll(folderString, 0777)
 		if err != nil {
 			checkErr("Error in creating directory DiskLog", err)
