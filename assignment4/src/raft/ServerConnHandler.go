@@ -2,7 +2,7 @@ package raft
 
 import (
 	"encoding/gob"
-	"fmt"
+	//"fmt"
 	"net"
 	"strconv"
 	//"time"
@@ -14,7 +14,6 @@ func (r *Raft) connHandler(f int, e int) {
 	go r.listenToServers()
 	go r.listenToClients()
 	go r.ServerSM(f, e)
-	fmt.Println("Launched listeners and SM")
 	//time.Sleep(time.Second * 15)
 
 }
@@ -22,12 +21,10 @@ func (r *Raft) connHandler(f int, e int) {
 //==============+Assign4+===========
 
 func (r *Raft) listenToServers() {
-	fmt.Println("In listen to servers", r.myId())
 	port := r.Myconfig.LogPort
 	service := r.Myconfig.Hostname + ":" + strconv.Itoa(port)
 	tcpaddr, err := net.ResolveTCPAddr("tcp", service)
 	if err != nil {
-		fmt.Println("Error in listenToServers(),ResolveTCPAddr")
 		checkErr("Error in listenToServers(),ResolveTCPAddr", err)
 		return
 	} else {
@@ -35,21 +32,15 @@ func (r *Raft) listenToServers() {
 		listener, err := net.ListenTCP("tcp", tcpaddr)
 		if err != nil {
 			checkErr("Error in listenToServers(),ListenTCP", err)
-			fmt.Println("Error after Listen", err)
 			return
 		} else {
 			for {
-				fmt.Println(r.myId(), "listening to servers")
 				conn, err := listener.Accept()
-				//fmt.Println(r.myId(), "Accepted!,conn:", conn)
 				if err != nil {
-					//					fmt.Println("Err in listener.Accept")
 					checkErr("Error in listenToServers(),Accept", err)
 					continue
 				} else if conn != nil { //Added if to remove nil pointer reference error
 					//					fmt.Println("Connection accepted", r.myId())
-					//go r.writeToEvCh(conn)
-					//go r.updateReceiverConn(conn)
 					go r.writeToEvCh(conn)
 				}
 			}
@@ -59,25 +50,21 @@ func (r *Raft) listenToServers() {
 }
 
 func (r *Raft) listenToClients() {
-	fmt.Println("In listen to client", r.myId())
 	port := r.Myconfig.ClientPort
 	service := r.Myconfig.Hostname + ":" + strconv.Itoa(port)
 	tcpaddr, err := net.ResolveTCPAddr("tcp", service)
 	if err != nil {
-		fmt.Println("Error in listenToClients(),ResolveTCPAddr", err)
 		checkErr("Error in listenToClients(),ResolveTCPAddr", err)
 		return
 	} else {
 		listener, err := net.ListenTCP("tcp", tcpaddr)
 		if err != nil {
-			fmt.Println("Error in listenToClients(),ListenTCP", err)
+
 			checkErr("Error in listenToClients(),ListenTCP", err)
 			return
 		} else {
 			for {
-				fmt.Println("Looping for connection from client", r.myId())
 				conn, err := listener.Accept()
-				fmt.Println(r.myId(), "Accepted!,conn:", conn)
 				if err != nil {
 					continue
 				} else if conn != nil { //Added if to remove nil pointer reference error

@@ -2,7 +2,7 @@ package clientCH
 
 import (
 	"encoding/gob"
-	"fmt"
+	//"fmt"
 	"log"
 	"net"
 	"strconv"
@@ -29,7 +29,6 @@ func Client(ch chan string, strEcho string, hostname string, port int) {
 			//	fmt.Println("Encoding done, in Client connH", msg)
 			rep, err := DecodeInterface_Client(conn)
 			if err != nil {
-				fmt.Println("Error in client() decode")
 				checkErr("Error in Client(),", err)
 				return
 			}

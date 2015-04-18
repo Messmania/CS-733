@@ -3,7 +3,7 @@ package raft
 import (
 	"encoding/gob"
 	"encoding/json"
-	"fmt"
+	//"fmt"
 	"math"
 	"net"
 	"os"
@@ -226,7 +226,7 @@ func (r *Raft) EncodeInterface(conn net.Conn, msg interface{}) int {
 	err_enc := enc_net.Encode(msgPtr)
 	if err_enc != nil {
 		msg := r.myId() + ", Error in EncodeInterface"
-		fmt.Println("Error in Encode of raft", err_enc)
+
 		checkErr(msg, err_enc)
 		return -1
 	}
@@ -349,7 +349,7 @@ func (r *Raft) follower(timeout int) int {
 		case RequestVote:
 			waitTime_msecs := msecs * time.Duration(waitTime)
 			request := req.(RequestVote)
-			fmt.Println(r.myId(), "===================RequestVote came================from:", request.CandidateId)
+
 			HeartBeatTimer.Reset(waitTime_msecs)
 			//fmt.Println("Timer reset to:", waitTime_msecs)
 			r.serviceRequestVote(request)
@@ -362,7 +362,7 @@ func (r *Raft) follower(timeout int) int {
 			response.LogEntry = fmtItem
 			r.CommitCh <- &response.LogEntry
 		case int:
-			fmt.Println("In follower timeout", r.myId())
+
 			HeartBeatTimer.Stop()
 			return candidate
 		}
@@ -372,14 +372,14 @@ func (r *Raft) follower(timeout int) int {
 //conducts election, returns only when state is changed else keeps looping on outer loop(i.e. restarting elections)
 func (r *Raft) candidate(timeout int) int {
 	//myId := r.Myconfig.Id
-	fmt.Println("==============================I am candidate==========================", r.myId())
+
 	//waitTime := 10 //election time out
 	waitTime := timeout //added for passing timeout from outside--In SingleServerBinary
 	//	fmt.Println("ELection timeout is", waitTime)
 	ElectionTimer := r.StartTimer(ElectionTimeout, waitTime)
 	//This loop is for election process which keeps on going until a leader is elected
 	for {
-		fmt.Println("===============Election started===================")
+
 		//reset the Votes else it will reflect the Votes received in last Term
 		r.resetVotes()
 		r.CurrentTerm = r.CurrentTerm + 1 //increment current Term
@@ -401,7 +401,7 @@ func (r *Raft) candidate(timeout int) int {
 			switch req.(type) {
 			case RequestVoteResponse: //got the Vote response
 				response := req.(RequestVoteResponse) //explicit typecasting so that fields of struct can be used
-				fmt.Println("Got the Vote", response.VoteGranted, "from", response.Id)
+
 				if response.VoteGranted {
 					r.f_specific[response.Id].Vote = true
 					//r.VoteCount = r.VoteCount + 1
@@ -420,7 +420,6 @@ func (r *Raft) candidate(timeout int) int {
 				request := req.(AppendEntriesReq)
 				//Can be clubbed with serviceAppendEntriesReq with few additions!--SEE LATER
 
-				fmt.Println("I am ", r.Myconfig.Id, "candidate,got AE_Req from", request.LeaderId, "Terms my,leader are", r.CurrentTerm, request.Term)
 				waitTime_msecs := msecs * time.Duration(waitTime)
 				appEntriesResponse := AppendEntriesResponse{}
 				appEntriesResponse.FollowerId = r.Myconfig.Id
@@ -455,7 +454,6 @@ func (r *Raft) candidate(timeout int) int {
 
 //Keeps sending heartbeats until state changes to follower
 func (r *Raft) leader() int {
-	fmt.Println("================In leader()======================", r.myId())
 
 	r.sendAppendEntriesRPC() //send Heartbeats
 	waitTime := 1            //duration between two heartbeats
@@ -538,14 +536,13 @@ func (r *Raft) leader() int {
 			//fmt.Println("Timeout of", r.Myconfig.Id, "is of type:", timeout)
 			//waitTime_msecs := msecs * time.Duration(waitTime)
 			if timeout == HeartbeatTimeout {
-				//				fmt.Println("Time to send HBs!", r.myId())
-				fmt.Println("Leader:Reseting HB timer")
+
 				HeartbeatTimer.Reset(waitTime_msecs)
 				responseCount = 0 //since new heartbeat is now being sent
 				//it depends on nextIndex which is correctly read in prepAE_Req method,
 				//since it was AE other than HB(last entry), it would have already modified the nextIndex map
 				r.sendAppendEntriesRPC() //This either sends Heartbeats or retries the failed AE due to which the timeout happened,
-				//HeartbeatTimer.Reset(msecs * time.Duration(8)) //for checking leader change, setting timer of f4 to 8s--DOESN'T work..-_CHECK
+
 			}
 		}
 	}

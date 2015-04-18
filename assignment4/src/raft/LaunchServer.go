@@ -3,7 +3,7 @@ package raft
 //package main
 
 import (
-	"fmt"
+	//"fmt"
 	//"log"
 	"os"
 	"strconv"
@@ -75,8 +75,6 @@ func NewRaft(cluster *ClusterConfig, thisServerId int, commitCh chan *LogEntry) 
 	f_specificMutex := &sync.RWMutex{}
 	raftObj = &Raft{*cluster, myObj, leaderObj, 0, commitCh, eventCh, -1, -1, myLog, metaData, f_details, pathString_CV, pathString_Log, f_specificMutex}
 
-	//server_raft_map[myObj.Id] = raftObj //NOT NEEDED NOW--REMOVE
-	fmt.Println("Exiting NewRaft")
 	return raftObj, err
 }
 

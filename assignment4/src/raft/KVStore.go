@@ -1,9 +1,6 @@
 package raft
 
 import (
-	//"fmt"
-	//	"log"
-	//	"math"
 	"math/rand"
 	"net"
 	"strconv"
