@@ -489,7 +489,7 @@ func (r *Raft) leader() int {
 			response := req.(AppendEntriesResponse)
 			//fmt.Println("got AE_Response! from : ", response.FollowerId, response)
 			responseCount += 1
-			if responseCount >= majority {
+			if responseCount >= majority-1 {
 				waitTime_retry := msecs * time.Duration(waitStepDown)
 				RetryTimer.Reset(waitTime_retry)
 			}
@@ -582,7 +582,7 @@ func (r *Raft) serviceAppendEntriesResp(response AppendEntriesResponse, Heartbea
 	}
 	//if responseCount >= majority { //convert this nested ifs to && if condition
 	//fmt.Println("Responses received from majority")
-	if *ack == majority { //are all positive acks? if not wait for responses--WHY NOT >= ?? CHECK- Because it will advance commitIndex for acks= 3,4,5
+	if *ack == majority-1 { //are all positive acks? if not wait for responses--WHY NOT >= ?? CHECK- Because it will advance commitIndex for acks= 3,4,5
 		//which is unecessary
 		//		fmt.Println("Acks received from majority for NI:", lastIndex, *ack)
 		r.advanceCommitIndex(response.Term)
@@ -601,7 +601,7 @@ func (r *Raft) advanceCommitIndex(responseTerm int) {
 		for i := prevCommitIndex + 1; i <= newCommitIndex; i++ { //it will always be same in the implementation, i.e. loop will run once only
 			//fmt.Println(r.myId(), "loop var", i, newCommitIndex)
 			//fmt.Println("acks for", i, r.MyLog[i].acks)
-			if r.MyLog[i].Acks >= majority {
+			if r.MyLog[i].Acks >= majority-1 {
 				//advance CI
 				r.MyMetaData.CommitIndex += 1
 

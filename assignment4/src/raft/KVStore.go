@@ -53,7 +53,7 @@ func (r *Raft) kvStoreProcessing(logEntry *LogEntry) {
 	//cmd contains individual fields of command
 	cmd := strings.Fields(str[0])
 	l = len(cmd)
-	if l > 0 {
+	if l > 1 {
 		op = strings.ToLower(cmd[0])
 		value = str[1]
 		key = cmd[1]
@@ -103,8 +103,10 @@ func (r *Raft) kvStoreProcessing(logEntry *LogEntry) {
 		}
 	case "delete":
 		sr = deleteRecord(key)
+
 	default:
-		sr = "ERRINTERNAL\r\n"
+		//sr = "ERRINTERNAL\r\n"
+		sr = "ERR_CMD_ERR\r\n"
 	}
 
 	r.EncodeInterface(conn, sr)
