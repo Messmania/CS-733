@@ -1,8 +1,10 @@
 # Hierarchy
+	Inside src folder are the following packages and files
 	1. Folder clientCH contains client related connection handler package.
 	2. Folder raft contains raft package which all the servers run on.
 	3. Folder serverStarter contains main package for starting a server.
-	4. ClusterConfig.json contains the cluster configuration in json format..
+	4. ClusterConfig.json contains the cluster configuration in json format.
+	5. Raft_test is the test file.
 	
 # Steps to install
 	1. Set GOPATH to parent of the required src folder
