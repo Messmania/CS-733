@@ -23,11 +23,11 @@
 	5. With no log entries, any server is a valid leader.
 	6. If leader crashes, then new leader is elected by comparing the current term and log length.
 
-=> Client requests:
+# Client requests:
 	12. Client sends append requests to leader to which leader responds only after it is replicated to majority of the followers.
 	13. Client requests to followers get a redirect message giving the PORT NUMBER of current leader.
 
-=> Log Repair:
+# Log Repair:
 	1. Log repair is done in Heartbeats.
 	2. Leader sends its last entry along with prev entry to all as Heartbeat.
 	3. When follower have prev entry in their log, it means their log is consistent till now and new entry (i.e. leader's last entry) is appended to log.
@@ -35,21 +35,21 @@
 	5. When leader receives false and compares the last index received, it decrements the nextIndex by 1 for this follower.
 	6. Now in next Heartbeat, prev entry and entry before that will be sent to this follower and this will keep repeating till log is repaired.
 	
-=> Commit Index:
+# Commit Index:
 	1. Commit index is advanced only when majority acks for current entry is received.
 	
-=> Encoding:
+# Encoding:
 	1. Json encoding is used to write persistent state to files.
 	2. Gob encoding is used for exchange of requests and responses between servers.
 	3. Byte encoding is used for exchange of messages between servers and clients.
 	
-=> Communication:
+# Communication:
 	1. Each server communicates with each other as well as clients using conn objects.
 	2. Each servers makes two connections, one for receiving other for sending.
 	3. Each server has a map for storing conn for destination servers.Therefore when sending the message to servers, conn is read from map, if nil, new connection is made with destination server and conn is stored in the map.
 	4. Whenever a server closes the connection , corresponding conn is set as nil in other end of the pipe, so encoding doesn't give error.	
 	
-=> Test Cases:
+# Test Cases:
 	1. Test_SCA : Tests a single entry append to current leader which tests the commit of entry from current term too.
 	2. Test_MCA : Tests concurrency to leader by firing 5 commmands in parallel.
 	3. Test_CA_Followers: Tests the redirection message from followers.
