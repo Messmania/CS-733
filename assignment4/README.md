@@ -1,8 +1,7 @@
 # Steps to install
 	1. Set GOPATH to parent of the required src folder
-	2. This project uses Exec from test metho
-		    1. Steps to be followed:
-	        1. cd to src folder and execute following commands
+	2. This project uses Exec from test method
+		    1. Steps to be followed: cd to src folder and execute following commands
 	            1. go install raft
 	            2. go install clientCH
 	            3. go install serverStarter
@@ -24,8 +23,8 @@
 	6. If leader crashes, then new leader is elected by comparing the current term and log length.
 
 # Client requests:
-	12. Client sends append requests to leader to which leader responds only after it is replicated to majority of the followers.
-	13. Client requests to followers get a redirect message giving the PORT NUMBER of current leader.
+	1. Client sends append requests to leader to which leader responds only after it is replicated to majority of the followers.
+	2. Client requests to followers get a redirect message giving the PORT NUMBER of current leader.
 
 # Log Repair:
 	1. Log repair is done in Heartbeats.
