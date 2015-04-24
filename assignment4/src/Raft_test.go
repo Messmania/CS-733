@@ -162,8 +162,9 @@ func Test_LeaderChanges(t *testing.T) {
 	go clientCH.Client(myChan, set1, hostname, port)
 	response := <-myChan
 	RLine := strings.Split(response, "\r\n")
-	if RLine[1] != "" && RLine[0] != expected {
-		t.Error("Mismatch!", response, expected)
+	received := strings.Fields(RLine[0])
+	if received[0] != expected {
+		t.Error("Mismatch! Expected and received values are:", expected, received[0])
 	}
 
 }
@@ -249,7 +250,6 @@ func TestErrors(t *testing.T) {
 	msg1 := "del ms"
 
 	cmd := []string{get1, getm1, cas1, del1, get1, set1, cas2, get2, set2, cas3, msg1}
-	//cd := []string{"get1", "getm1", "cas1", "del1", "get1", "set1", "cas2", "get2", "set2", "cas3", "msg1"}
 	err0 := "ERRNOTFOUND\r\n"
 	err1 := "ERR_CMD_ERR\r\n"
 	err2 := "ERR_VERSION\r\n"
@@ -266,7 +266,7 @@ func TestErrors(t *testing.T) {
 	for i := 0; i < n; i++ {
 		go clientCH.Client(chann[i], cmd[i], hostname, port)
 		//Sleep is added so that all errors can be tested explicitly
-		time.Sleep(time.Millisecond * 100)
+		time.Sleep(time.Millisecond * 200)
 	}
 
 	var R [n]string
