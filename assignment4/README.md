@@ -1,4 +1,4 @@
-=> Steps to install
+# Steps to install
 	1. Set GOPATH to parent of the required src folder
 	2. This project uses Exec from test metho
 		    1. Steps to be followed:
@@ -8,14 +8,14 @@
 	            3. go install serverStarter
 	            4. go test
 
-=> Working :
+# Flow :
 	1. System has 5 servers, when they start, they look for their persistent state on Disk which is stored in folder DiskLog
 	2. If folder doesn't exist then it is created for each server on their start.
 	3. If folders exist, which means server crashed and is now resuming , then state is read from the DiskLog and database is updated
 	4. All servers start by creating/reading their state from disk.
 	5. Follower timeouts are set as [10 2 7 9 13] for S0,1,2,3,4 resp. so that testing can be done.
 
-=> Leader election: 
+# Leader election: 
 	1. All servers start off as followers and then the one with least timeout becomes candidate and starts the election.
 	2. A leader is elected during the election. 
 	3. When the leader is elected, then it sends Heartbeats to all periodically (which is set to 50 msec for this) to maintain its authority.
