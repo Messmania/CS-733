@@ -1,3 +1,9 @@
+# Hierarchy
+	1. Folder clientCH contains client related connection handler package.
+	2. Folder raft contains raft package which all the servers run on.
+	3. Folder serverStarter contains main package for starting a server.
+	4. ClusterConfig.json contains the cluster configuration in json format..
+	
 # Steps to install
 	1. Set GOPATH to parent of the required src folder
 	2. This project uses Exec from test method
@@ -49,6 +55,7 @@
 	4. Whenever a server closes the connection , corresponding conn is set as nil in other end of the pipe, so encoding doesn't give error.	
 	
 # Test Cases:
+	Test files Raft_test first execs all 5 servers and then fires following tests.
 	1. Test_SCA : Tests a single entry append to current leader which tests the commit of entry from current term too.
 	2. Test_MCA : Tests concurrency to leader by firing 5 commmands in parallel.
 	3. Test_CA_Followers: Tests the redirection message from followers.

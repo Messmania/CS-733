@@ -17,7 +17,7 @@ var port int = 9001
 //var msecs time.Duration = time.Millisecond * 10
 var msecs time.Duration = time.Second
 var process = [5]*exec.Cmd{}
-var filename string = "json.json"
+var filename string = "ClusterConfig.json"
 var w0, w1, w2, w3, w4 int
 var w, id []int
 
