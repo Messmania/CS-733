@@ -13,7 +13,6 @@ func readJson(filename string) raft.ClusterConfig {
 	fi, err := os.Open(filename)
 
 	if err != nil {
-		//		fmt.Println(err)
 		return v
 	}
 	b, e := ioutil.ReadAll(fi)
@@ -25,7 +24,6 @@ func readJson(filename string) raft.ClusterConfig {
 
 	err = json.Unmarshal(b, &f)
 	if err != nil {
-		//		fmt.Println(err)
 		return v
 	}
 	m := f.(map[string]interface{})
