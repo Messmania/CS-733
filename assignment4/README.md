@@ -30,10 +30,19 @@
 	5. With no log entries, any server is a valid leader.
 	6. If leader crashes, then new leader is elected by comparing the current term and log length.
 
-# Client requests:
+# Commit of entries from current term:
 	1. Client sends append requests to leader to which leader responds only after it is replicated to majority of the followers.
 	2. Client requests to followers get a redirect message giving the PORT NUMBER of current leader.
 
+# Commit of entries from prev term:
+	1. Not able to simulate the scenario completely.
+	2. Crash the leader right after append to its log.
+	3. Now same server must resume before elections start so as to become leader.
+	4. Now leader tries to commit entry from prev term and doesn't advance commit index right then.
+	5. Only after there is a client request in current term, commit index is advanced.
+	6. Problem: Append method is not draining commit chan after particular number of entries,
+	 Therefore, Write to commit chan is frozen.
+	
 # Log Repair:
 	1. Log repair is done in Heartbeats.
 	2. Leader sends its last entry along with prev entry to all as Heartbeat.
